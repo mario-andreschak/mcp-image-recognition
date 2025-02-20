@@ -20,7 +20,8 @@ class OpenAIVision:
             raise ValueError("OpenAI API key not provided and not found in environment")
 
         self.base_url = os.getenv("OPENAI_BASE_URL")
-        self.timeout = float(os.getenv("OPENAI_TIMEOUT", 60))
+        timeout_value = os.getenv("OPENAI_TIMEOUT", 60)
+        self.timeout = float(timeout_value)
         self.client = AsyncOpenAI(
             api_key=self.api_key, base_url=self.base_url, timeout=self.timeout
         )

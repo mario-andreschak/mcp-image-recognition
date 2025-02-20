@@ -15,10 +15,15 @@ IF "%1"=="test" (
     )
 ) ELSE IF "%1"=="server" (
     cls
-    python -m src.image_recognition_server.server
+    cd ./build/lib
+    set PYTHONIOENCODING=utf-8
+    python -m image_recognition_server.server
+    cd ../..
 ) ELSE IF "%1"=="debug" (
     cls
-    npx @modelcontextprotocol/inspector python -m src.image_recognition_server.server
+    cd ./build/lib
+    npx @modelcontextprotocol/inspector python -m image_recognition_server.server
+    cd ../..
 ) ELSE IF "%1"=="full" (
     build.bat
     run.bat debug

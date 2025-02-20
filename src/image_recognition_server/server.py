@@ -9,19 +9,40 @@ from mcp.server.fastmcp import FastMCP
 from PIL import Image
 
 from .utils.image import image_to_base64, validate_base64_image
-from .utils.ocr import extract_text_from_image
+from .utils.ocr import OCRError, extract_text_from_image
 from .vision.anthropic import AnthropicVision
 from .vision.openai import OpenAIVision
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging
+# Configure encoding, defaulting to UTF-8
+DEFAULT_ENCODING = "utf-8"
+ENCODING = os.getenv("MCP_OUTPUT_ENCODING", DEFAULT_ENCODING)
+
+# Configure logging to file
+log_file_path = os.path.join(os.path.dirname(__file__), "mcp_server.log")
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename=log_file_path,
+    filemode="a",  # Append to log file
 )
 logger = logging.getLogger(__name__)
+
+logger.info(f"Using encoding: {ENCODING}")
+
+
+def sanitize_output(text: str) -> str:
+    """Sanitize output string to replace problematic characters."""
+    if text is None:
+        return ""  # Return empty string for None
+    try:
+        return text.encode(ENCODING, "replace").decode(ENCODING)
+    except Exception as e:
+        logger.error(f"Error during sanitization: {str(e)}", exc_info=True)
+        return text  # Return original text if sanitization fails
+
 
 # Create MCP server
 mcp = FastMCP(
@@ -75,22 +96,32 @@ async def process_image_with_ocr(image_data: str, prompt: str) -> str:
     else:
         description = client.describe_image(image_data, prompt)
 
-    # Try OCR if enabled
-    try:
-        if os.getenv("ENABLE_OCR", "false").lower() == "true":
+    # Check for empty or default response
+    if not description or description == "No description available.":
+        raise ValueError("Vision API returned empty or default response")
+
+    # Handle OCR if enabled
+    ocr_enabled = os.getenv("ENABLE_OCR", "false").lower() == "true"
+    if ocr_enabled:
+        try:
             # Convert base64 to PIL Image
             image_bytes = base64.b64decode(image_data)
             image = Image.open(io.BytesIO(image_bytes))
 
-            # Extract text
-            if ocr_text := extract_text_from_image(image):
+            # Extract text with OCR required flag
+            if ocr_text := extract_text_from_image(image, ocr_required=True):
                 description += (
                     f"\n\nAdditionally, this is the output of tesseract-ocr: {ocr_text}"
                 )
-    except Exception as e:
-        logger.warning(f"OCR processing failed: {str(e)}")
+        except OCRError as e:
+            # Propagate OCR errors when OCR is enabled
+            logger.error(f"OCR processing failed: {str(e)}")
+            raise ValueError(f"OCR Error: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error during OCR: {str(e)}")
+            raise
 
-    return description
+    return sanitize_output(description)
 
 
 @mcp.tool()
@@ -115,10 +146,13 @@ async def describe_image(
             raise ValueError("Invalid base64 image data")
 
         result = await process_image_with_ocr(image, prompt)
+        if not result:
+            raise ValueError("Received empty response from processing")
+
         logger.info("Successfully processed image")
-        return result
+        return sanitize_output(result)
     except ValueError as e:
-        logger.error(f"Invalid input error: {str(e)}")
+        logger.error(f"Input error: {str(e)}")
         raise
     except Exception as e:
         logger.error(f"Error describing image: {str(e)}", exc_info=True)
@@ -148,12 +182,16 @@ async def describe_image_from_file(
 
         # Use describe_image tool
         result = await describe_image(image=image_data, prompt=prompt)
-        return result
+
+        if not result:
+            raise ValueError("Received empty response from processing")
+
+        return sanitize_output(result)
     except FileNotFoundError:
         logger.error(f"Image file not found: {filepath}")
         raise
     except ValueError as e:
-        logger.error(f"Invalid image file: {str(e)}")
+        logger.error(f"Input error: {str(e)}")
         raise
     except Exception as e:
         logger.error(f"Error processing image file: {str(e)}", exc_info=True)

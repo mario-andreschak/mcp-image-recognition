@@ -1,6 +1,6 @@
 # MCP Image Recognition Server
 
-An MCP server that provides image recognition capabilities using Anthropic and OpenAI vision APIs. Version 0.1.1.
+An MCP server that provides image recognition capabilities using Anthropic and OpenAI vision APIs. Version 0.1.2.
 
 ## Features
 
@@ -124,5 +124,6 @@ MIT License - see LICENSE file for details.
 
 ## Release History
 
+- **0.1.2** (2025-02-20): Improved OCR error handling and added comprehensive test coverage for OCR functionality
 - **0.1.1** (2025-02-19): Added Tesseract OCR support for text extraction from images (optional feature)
 - **0.1.0** (2025-02-19): Initial release with Anthropic and OpenAI vision support
