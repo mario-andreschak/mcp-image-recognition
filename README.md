@@ -22,7 +22,7 @@ An MCP server that provides image recognition capabilities using Anthropic and O
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mcp-image-recognition.git
+git clone https://github.com/mario-andreschak/mcp-image-recognition.git
 cd mcp-image-recognition
 ```
 
