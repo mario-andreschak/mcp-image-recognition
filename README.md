@@ -63,18 +63,32 @@ run.bat server
 
 ### Environment Configuration
 
-- `ANTHROPIC_API_KEY`: Your Anthropic API key
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `VISION_PROVIDER`: Primary vision provider (`anthropic` or `openai`)
-- `FALLBACK_PROVIDER`: Optional fallback provider
-- `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
-- `ENABLE_OCR`: Enable Tesseract OCR text extraction (`true` or `false`)
-- `TESSERACT_CMD`: Optional custom path to Tesseract executable
+- `ANTHROPIC_API_KEY`: Your Anthropic API key.
+- `OPENAI_API_KEY`: Your OpenAI API key.
+- `VISION_PROVIDER`: Primary vision provider (`anthropic` or `openai`).
+- `FALLBACK_PROVIDER`: Optional fallback provider.
+- `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR).
+- `ENABLE_OCR`: Enable Tesseract OCR text extraction (`true` or `false`).
+- `TESSERACT_CMD`: Optional custom path to Tesseract executable.
+- `OPENAI_MODEL`: OpenAI Model (default: `gpt-4o-mini`). Can use OpenRouter format for other models (e.g., `anthropic/claude-3.5-sonnet:beta`).
+- `OPENAI_BASE_URL`: Optional custom base URL for the OpenAI API.  Set to `https://openrouter.ai/api/v1` for OpenRouter.
+- `OPENAI_TIMEOUT`: Optional custom timeout (in seconds) for the OpenAI API.
+
+### Using OpenRouter
+
+OpenRouter allows you to access various models using the OpenAI API format. To use OpenRouter, follow these steps:
+
+1.  Obtain an OpenAI API key from OpenRouter.
+2.  Set `OPENAI_API_KEY` in your `.env` file to your OpenRouter API key.
+3.  Set `OPENAI_BASE_URL` to `https://openrouter.ai/api/v1`.
+4.  Set `OPENAI_MODEL` to the desired model using the OpenRouter format (e.g., `anthropic/claude-3.5-sonnet:beta`).
+5. Set `VISION_PROVIDER` to `openai`.
 
 ### Default Models
 
 - Anthropic: `claude-3.5-sonnet-beta`
 - OpenAI: `gpt-4o-mini`
+- OpenRouter: Use the `anthropic/claude-3.5-sonnet:beta` format in `OPENAI_MODEL`.
 
 ## Development
 
