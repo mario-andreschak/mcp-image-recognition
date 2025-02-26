@@ -40,15 +40,19 @@ build.bat
 ## Usage
 
 ### Running the Server
+Spawn the server using python:
+```bash
+python -m image_recognition_server.server
+```
+
+Start the server using batch instead:
+```bash
+run.bat server
+```
 
 Start the server in development mode with the MCP Inspector:
 ```bash
 run.bat debug
-```
-
-Or run directly:
-```bash
-run.bat server
 ```
 
 ### Available Tools
