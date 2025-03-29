@@ -11,6 +11,7 @@ from PIL import Image
 from .utils.image import image_to_base64, validate_base64_image
 from .utils.ocr import OCRError, extract_text_from_image
 from .vision.anthropic import AnthropicVision
+from .vision.cloudflare import CloudflareWorkersAI
 from .vision.openai import OpenAIVision
 
 # Load environment variables
@@ -52,7 +53,7 @@ mcp = FastMCP(
 
 
 # Initialize vision clients
-def get_vision_client() -> Union[AnthropicVision, OpenAIVision]:
+def get_vision_client() -> Union[AnthropicVision, OpenAIVision, CloudflareWorkersAI]:
     """Get the configured vision client based on environment settings."""
     provider = os.getenv("VISION_PROVIDER", "anthropic").lower()
 
@@ -61,6 +62,8 @@ def get_vision_client() -> Union[AnthropicVision, OpenAIVision]:
             return AnthropicVision()
         elif provider == "openai":
             return OpenAIVision()
+        elif provider == "cloudflare":
+            return CloudflareWorkersAI()
         else:
             raise ValueError(f"Invalid vision provider: {provider}")
     except Exception as e:
@@ -74,6 +77,8 @@ def get_vision_client() -> Union[AnthropicVision, OpenAIVision]:
                 return AnthropicVision()
             elif fallback.lower() == "openai":
                 return OpenAIVision()
+            elif fallback.lower() == "cloudflare":
+                return CloudflareWorkersAI()
         raise
 
 
@@ -90,8 +95,8 @@ async def process_image_with_ocr(image_data: str, prompt: str) -> str:
     # Get vision AI description
     client = get_vision_client()
 
-    # Handle both sync (Anthropic) and async (OpenAI) clients
-    if isinstance(client, OpenAIVision):
+    # Handle both sync (Anthropic) and async (OpenAI, Cloudflare) clients
+    if isinstance(client, (OpenAIVision, CloudflareWorkersAI)):
         description = await client.describe_image(image_data, prompt)
     else:
         description = client.describe_image(image_data, prompt)
