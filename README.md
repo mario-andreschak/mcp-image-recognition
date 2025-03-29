@@ -224,24 +224,31 @@ git clone https://github.com/zudsniper/mcp-image-recognition.git
 cd mcp-image-recognition
 ```
 
-2. Create a virtual environment:
+2. Setup with uv (recommended):
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install uv if not installed
+pip install uv
+
+# Create virtual environment and install deps
+uv venv
+uv venv activate
+uv pip install -e ".[dev]"
 ```
 
-3. Install development dependencies:
-```bash
-pip install -e ".[dev]"
-# Or alternatively:
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-```
+> Alternative setup with pip:
+> ```bash
+> python -m venv venv
+> source venv/bin/activate  # On Windows: venv\Scripts\activate
+> pip install -e ".[dev]"
+> # Or alternatively:
+> pip install -r requirements.txt
+> pip install -r requirements-dev.txt
+> ```
 
-4. Create and configure your environment file:
+3. Configure environment:
 ```bash
 cp .env.example .env
-# Edit .env with your API keys and preferences
+# Edit .env with your API keys
 ```
 
 #### Testing Your Changes Locally
