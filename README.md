@@ -270,9 +270,17 @@ cp .env.example .env
 
 #### Using Development Container with Claude Desktop
 
-1. Start the container with docker-compose:
+1. Make sure your environment variables are loaded:
 ```bash
-docker-compose up -d
+# Load variables from .env
+set -a; source .env; set +a  # For bash/zsh
+# OR using env command
+env $(cat .env) docker-compose up -d
+```
+
+2. Alternatively, pass .env file directly:
+```bash
+docker-compose --env-file .env up -d
 ```
 
 2. Add this to your Claude Desktop config:

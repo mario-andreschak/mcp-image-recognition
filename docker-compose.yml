@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: mcp-image-recognition-dev
+    # env_file can be used instead of environment section:
+    # env_file: .env
     environment:
       - VISION_PROVIDER=${VISION_PROVIDER:-openai}
       - OPENAI_API_KEY=${OPENAI_API_KEY}

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-image-recognition"
-version = "1.2.1"
+version = "1.2.2"
 description = "MCP server for image recognition using vision APIs (Anthropic, OpenAI, Cloudflare Workers AI)"
 readme = "README.md"
 authors = [{name = "Mario & Contributors"}]
