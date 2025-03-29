@@ -266,3 +266,20 @@ MIT License - see LICENSE file for details.
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Releasing New Versions
+
+To release a new version:
+
+1. Update version in `pyproject.toml` and `setup.py`
+2. Push changes to the `release` branch
+3. GitHub Actions will automatically:
+   - Run tests
+   - Build and push Docker images
+   - Publish to PyPI
+   - Create a GitHub Release
+
+Required repository secrets for CI/CD:
+- `DOCKERHUB_USERNAME` - Docker Hub username
+- `DOCKERHUB_TOKEN` - Docker Hub access token
+- `PYPI_API_TOKEN` - PyPI API token
