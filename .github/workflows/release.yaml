@@ -10,8 +10,36 @@ env:
   UVX_PACKAGE: mcp-image-recognition
 
 jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+      exists: ${{ steps.version-check.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract version
+        id: extract-version
+        run: echo "version=$(grep -m 1 'version' pyproject.toml | cut -d'"' -f2)" >> $GITHUB_OUTPUT
+      
+      - name: Check if version exists on PyPI
+        id: version-check
+        run: |
+          response=$(curl -s https://pypi.org/pypi/mcp-image-recognition/json || echo '{"releases":{}}')
+          versions=$(echo $response | jq -r '.releases | keys[]' 2>/dev/null || echo '')
+          version="${{ steps.extract-version.outputs.version }}"
+          
+          if echo "$versions" | grep -q "^$version$"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::error::Version $version already exists on PyPI. Please update the version in pyproject.toml and setup.py"
+            exit 1
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
   test:
     runs-on: ubuntu-latest
+    needs: version-check
     steps:
       - uses: actions/checkout@v4
       
@@ -36,7 +64,7 @@ jobs:
           PYTHONPATH=$PWD pytest tests/ --asyncio-mode=strict
 
   build-and-push-docker:
-    needs: test
+    needs: [test, version-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,9 +81,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Extract version
+      - name: Set version from version-check job
         id: version
-        run: echo "VERSION=$(grep -m 1 'version' pyproject.toml | cut -d'"' -f2)" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${{ needs.version-check.outputs.version }}" >> $GITHUB_OUTPUT
       
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -68,7 +96,7 @@ jobs:
             ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
 
   publish-uvx:
-    needs: test
+    needs: [test, version-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,14 +122,14 @@ jobs:
           twine upload dist/* --username __token__ --password $PYPI_API_TOKEN
 
   create-release:
-    needs: [build-and-push-docker, publish-uvx]
+    needs: [build-and-push-docker, publish-uvx, version-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Extract version
+      - name: Set version from version-check job
         id: version
-        run: echo "VERSION=$(grep -m 1 'version' pyproject.toml | cut -d'"' -f2)" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${{ needs.version-check.outputs.version }}" >> $GITHUB_OUTPUT
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
