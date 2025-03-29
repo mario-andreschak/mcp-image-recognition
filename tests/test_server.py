@@ -7,15 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from image_recognition_server.server import describe_image, describe_image_from_file
 
-# Test image (a simple 1x1 pixel PNG)
-TEST_IMAGE_DATA = base64.b64encode(
-    bytes.fromhex(
-        "89504e470d0a1a0a0000000d494844520000000100000001080600000001f15c"
-        "4a00000009704859730000000ec400000ec401952b0e1b0000001c4944415478"
-        "9c636460606062626060606060600000000000ffff030000060001f5f7e3c000"
-        "00000049454e44ae426082"
-    )
-).decode()
+# Valid 1x1 pixel PNG image
+TEST_IMAGE_DATA = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
 
 # Mock environment variables
 @pytest.fixture(autouse=True)
