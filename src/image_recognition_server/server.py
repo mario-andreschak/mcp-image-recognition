@@ -203,5 +203,9 @@ async def describe_image_from_file(
         raise
 
 
-if __name__ == "__main__":
+def main():
+    """Entry point for the MCP server."""
     mcp.run()
+
+if __name__ == "__main__":
+    main()

@@ -2,9 +2,14 @@
 
 An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 0.1.3.
 
+![MCP Image Recognition](https://raw.githubusercontent.com/zudsniper/mcp-image-recognition/master/assets/mcp-image-recognition-banner.png)
+
 ## Features
 
 - Image description using Anthropic Claude Vision, OpenAI GPT-4 Vision, or Cloudflare Workers AI llava-1.5-7b-hf
+- Easy integration with Claude Desktop, Cursor, and other MCP-compatible clients
+- Support for Docker deployment
+- Support for uvx installation
 - Support for multiple image formats (JPEG, PNG, GIF, WebP)
 - Configurable primary and fallback providers
 - Base64 and file-based image input support
@@ -20,6 +25,31 @@ An MCP server that provides image recognition capabilities using Anthropic, Open
 
 ## Installation
 
+### Option 1: Using uvx (Recommended for Claude Desktop and Cursor)
+
+1. Install [uv](https://github.com/astral-sh/uv) package manager:
+```bash
+pip install uv
+```
+
+2. Install the package with uvx:
+```bash
+uvx install mcp-image-recognition
+```
+
+3. Create and configure your environment file as described in the Configuration section
+
+### Option 2: Using Docker
+
+```bash
+docker pull mcpimagerecognition/mcp-image-recognition:latest
+
+# Create a .env file first, then run:
+docker run -it --env-file .env mcpimagerecognition/mcp-image-recognition
+```
+
+### Option 3: From Source
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/mario-andreschak/mcp-image-recognition.git
@@ -34,25 +64,80 @@ cp .env.example .env
 
 3. Build the project:
 ```bash
-build.bat
+pip install -e .
+```
+
+## Integration
+
+### Claude Desktop Integration
+
+1. Go to **Claude** > **Settings** > **Developer** > **Edit Config** > **claude_desktop_config.json**
+2. Add the following configuration:
+
+```json
+{
+    "mcpServers": {
+        "image-recognition": {
+            "command": "uvx",
+            "args": [
+                "mcp-image-recognition"
+            ]
+        }
+    }
+}
+```
+
+### Cursor Integration
+
+Go to **Cursor Settings** > **MCP** and paste this as a command:
+
+```
+uvx mcp-image-recognition
+```
+
+### Docker Integration
+
+Add the following to your Claude Desktop config:
+
+```json
+{
+    "mcpServers": {
+        "image-recognition": {
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "--env-file=/path/to/your/.env",
+                "mcpimagerecognition/mcp-image-recognition:latest"
+            ]
+        }
+    }
+}
 ```
 
 ## Usage
 
-### Running the Server
-Spawn the server using python:
+### Running the Server Directly
+
+If installed with pip/uvx:
+```bash
+mcp-image-recognition
+```
+
+From source directory:
 ```bash
 python -m image_recognition_server.server
 ```
 
-Start the server using batch instead:
+Using Docker:
 ```bash
-run.bat server
+docker run -it --env-file .env mcpimagerecognition/mcp-image-recognition
 ```
 
-Start the server in development mode with the MCP Inspector:
+Start in development mode with the MCP Inspector:
 ```bash
-run.bat debug
+npx @modelcontextprotocol/inspector mcp-image-recognition
 ```
 
 ### Available Tools
@@ -145,9 +230,39 @@ To use Cloudflare Workers AI for image recognition:
    - `VISION_PROVIDER`: Set to `cloudflare`
    - `CLOUDFLARE_MODEL`: Optional, defaults to `@cf/llava-hf/llava-1.5-7b-hf`
 
+## Using with AI Assistants
+
+Once configured, your AI assistant (Claude, for example) can analyze images by:
+
+1. Upload an image directly in chat
+2. The assistant will automatically use the MCP server to analyze the image
+3. The assistant will describe the image in detail based on the vision API output
+
+Example prompt after uploading an image:
+```
+Please describe this image in detail.
+```
+
+You can also customize the prompt for specific needs:
+```
+What text appears in this image?
+```
+or
+```
+Is there any safety concern in this image?
+```
+
 ## Release History
 
-- **0.1.3** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model
+- **0.1.3** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
 - **0.1.2** (2025-02-20): Improved OCR error handling and added comprehensive test coverage for OCR functionality
 - **0.1.1** (2025-02-19): Added Tesseract OCR support for text extraction from images (optional feature)
 - **0.1.0** (2025-02-19): Initial release with Anthropic and OpenAI vision support
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
