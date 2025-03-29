@@ -275,12 +275,7 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-2. Get the container ID:
-```bash
-CONTAINER_ID=$(docker-compose ps -q mcp-image-recognition)
-```
-
-3. Add this to your Claude Desktop config:
+2. Add this to your Claude Desktop config:
 ```json
 {
     "mcpServers": {
@@ -289,7 +284,7 @@ CONTAINER_ID=$(docker-compose ps -q mcp-image-recognition)
             "args": [
                 "exec",
                 "-i",
-                "CONTAINER_ID_HERE",
+                "mcp-image-recognition-dev",
                 "python",
                 "-m",
                 "image_recognition_server.server"
@@ -303,8 +298,6 @@ CONTAINER_ID=$(docker-compose ps -q mcp-image-recognition)
     }
 }
 ```
-
-Replace `CONTAINER_ID_HERE` with your actual container ID.
 
 #### Testing Your Changes Locally
 
