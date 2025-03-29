@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: mcpimagerecognition/mcp-image-recognition
+  DOCKER_IMAGE: zudsniper/mcp-image-recognition
   UVX_PACKAGE: mcp-image-recognition
 
 jobs:
