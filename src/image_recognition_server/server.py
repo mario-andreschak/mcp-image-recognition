@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 from PIL import Image
 
-from .utils.image import image_to_base64, validate_base64_image
+from .utils.image import image_to_base64, url_to_base64, validate_base64_image
 from .utils.ocr import OCRError, extract_text_from_image
 from .vision.anthropic import AnthropicVision
 from .vision.cloudflare import CloudflareWorkersAI
@@ -200,6 +200,42 @@ async def describe_image_from_file(
         raise
     except Exception as e:
         logger.error(f"Error processing image file: {str(e)}", exc_info=True)
+        raise
+
+
+@mcp.tool()
+async def describe_image_from_url(
+    url: str, prompt: str = "Please describe this image in detail."
+) -> str:
+    """Describe the contents of an image from a URL using vision AI.
+
+    Args:
+        url: URL of the image
+        prompt: Optional prompt to use for the description.
+
+    Returns:
+        str: Detailed description of the image
+    """
+    try:
+        logger.info(f"Processing image from URL: {url}")
+
+        # Fetch image from URL and convert to base64
+        image_data, mime_type = url_to_base64(url)
+        logger.info(f"Successfully fetched image from URL. MIME type: {mime_type}")
+        logger.debug(f"Base64 data length: {len(image_data)}")
+
+        # Use describe_image tool
+        result = await describe_image(image=image_data, prompt=prompt)
+
+        if not result:
+            raise ValueError("Received empty response from processing")
+
+        return sanitize_output(result)
+    except ValueError as e:
+        logger.error(f"Input error: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Error processing image from URL: {str(e)}", exc_info=True)
         raise
 
 

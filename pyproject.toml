@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-image-recognition"
-version = "1.0.0"
+version = "1.0.1"
 description = "MCP server for image recognition using vision APIs (Anthropic, OpenAI, Cloudflare Workers AI)"
 readme = "README.md"
 authors = [{name = "Mario & Contributors"}]
@@ -22,6 +22,7 @@ dependencies = [
     "Pillow>=10.0.0",
     "pytesseract>=0.3.13",
     "httpx>=0.24.0",
+    "requests>=2.30.0",
 ]
 requires-python = ">=3.10"
 

@@ -5,3 +5,5 @@ python-dotenv>=1.0.0
 Pillow>=10.0.0
 pytesseract>=0.3.13
 httpx>=0.24.0
+requests>=2.30.0
+=======
