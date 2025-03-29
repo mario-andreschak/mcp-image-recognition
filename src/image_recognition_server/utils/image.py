@@ -1,6 +1,7 @@
 import base64
 import io
 import logging
+import requests
 from pathlib import Path
 from typing import Tuple
 
@@ -58,6 +59,51 @@ def image_to_base64(image_path: str) -> Tuple[str, str]:
     except Exception as e:
         logger.error(f"Unexpected error processing image: {str(e)}", exc_info=True)
         raise ValueError(f"Failed to process image: {str(e)}")
+
+
+def url_to_base64(image_url: str) -> Tuple[str, str]:
+    """Fetch an image from a URL and convert it to base64 string.
+
+    Args:
+        image_url: URL of the image
+
+    Returns:
+        Tuple of (base64_string, mime_type)
+
+    Raises:
+        ValueError: If URL is invalid or image cannot be fetched
+    """
+    try:
+        # Fetch image from URL
+        response = requests.get(image_url, timeout=10)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+        
+        # Get content type from headers
+        content_type = response.headers.get('Content-Type', 'application/octet-stream')
+        
+        # Verify it's an image
+        if not content_type.startswith('image/'):
+            raise ValueError(f"URL does not point to an image (Content-Type: {content_type})")
+        
+        # Convert to base64
+        image_data = response.content
+        base64_data = base64.b64encode(image_data).decode('utf-8')
+        
+        # Verify it's a valid image
+        try:
+            with Image.open(io.BytesIO(image_data)) as img:
+                logger.debug(f"Fetched image from URL: {image_url}, format: {img.format}, size: {img.size}")
+        except Exception as e:
+            raise ValueError(f"Downloaded content is not a valid image: {str(e)}")
+            
+        return base64_data, content_type
+        
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch image from URL: {str(e)}")
+        raise ValueError(f"Failed to fetch image from URL: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error fetching image from URL: {str(e)}", exc_info=True)
+        raise ValueError(f"Failed to process image from URL: {str(e)}")
 
 
 def validate_base64_image(base64_string: str) -> bool:

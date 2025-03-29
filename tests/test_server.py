@@ -5,7 +5,7 @@ import pytest_asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from image_recognition_server.server import describe_image, describe_image_from_file
+from image_recognition_server.server import describe_image, describe_image_from_file, describe_image_from_url
 
 # Valid 1x1 pixel PNG image
 TEST_IMAGE_DATA = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
@@ -65,3 +65,24 @@ async def test_describe_image_from_file_nonexistent(mock_vision_client):
     with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
         with pytest.raises(FileNotFoundError):
             await describe_image_from_file(filepath="/nonexistent/path.png", prompt="Test prompt")
+
+@pytest.mark.asyncio
+async def test_describe_image_from_url_function(mock_vision_client):
+    """Test the describe_image_from_url function directly."""
+    test_url = "https://example.com/image.jpg"
+    
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.url_to_base64', return_value=(TEST_IMAGE_DATA, "image/jpeg")):
+            result = await describe_image_from_url(url=test_url, prompt="Test prompt")
+            assert isinstance(result, str)
+            assert "test image description" in result.lower()
+
+@pytest.mark.asyncio
+async def test_describe_image_from_url_invalid(mock_vision_client):
+    """Test describe_image_from_url with invalid URL."""
+    test_url = "https://invalid-url.com/image.jpg"
+    
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.url_to_base64', side_effect=ValueError("Failed to fetch image")):
+            with pytest.raises(ValueError, match="Failed to fetch image"):
+                await describe_image_from_url(url=test_url, prompt="Test prompt")

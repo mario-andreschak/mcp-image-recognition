@@ -1,8 +1,12 @@
 # MCP Image Recognition Server
 
-An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 0.1.3.
+An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.1.0.
 
-![MCP Image Recognition](https://raw.githubusercontent.com/zudsniper/mcp-image-recognition/master/assets/mcp-image-recognition-banner.png)
+![MCP Image Recognition](assets/mcp-image-recognition-banner.png)
+
+## Authors
+Originally this project was created by [`@mario-andreschak`](https://github.com/mario-andreschak/).<sup>Thank you!</sup>  
+It is currently maintained by [`@zudsniper`](https://github.com/zudsniper).  
 
 ## Features
 
@@ -42,17 +46,17 @@ uvx install mcp-image-recognition
 ### Option 2: Using Docker
 
 ```bash
-docker pull mcpimagerecognition/mcp-image-recognition:latest
+docker pull zudsniper/mcp-image-recognition:latest
 
 # Create a .env file first, then run:
-docker run -it --env-file .env mcpimagerecognition/mcp-image-recognition
+docker run -it --env-file .env zudsniper/mcp-image-recognition
 ```
 
 ### Option 3: From Source
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/mario-andreschak/mcp-image-recognition.git
+git clone https://github.com/zudsniper/mcp-image-recognition.git
 cd mcp-image-recognition
 ```
 
@@ -150,7 +154,7 @@ python -m image_recognition_server.server
 
 Using Docker:
 ```bash
-docker run -it --env-file .env mcpimagerecognition/mcp-image-recognition
+docker run -it --env-file .env zudsniper/mcp-image-recognition
 ```
 
 Start in development mode with the MCP Inspector:
@@ -166,6 +170,11 @@ npx @modelcontextprotocol/inspector mcp-image-recognition
 
 2. `describe_image_from_file`
    - Input: Path to an image file
+   - Output: Detailed description of the image
+   - Note: When running in Docker, this tool requires mapping local directories (see Docker File Access section)
+
+3. `describe_image_from_url`
+   - Input: URL of an image
    - Output: Detailed description of the image
 
 ### Environment Configuration
@@ -205,6 +214,91 @@ OpenRouter allows you to access various models using the OpenAI API format. To u
 
 ## Development
 
+### Development Setup Guide
+
+#### Setting Up Development Environment
+
+1. Clone the repository:
+```bash
+git clone https://github.com/zudsniper/mcp-image-recognition.git
+cd mcp-image-recognition
+```
+
+2. Setup with uv (recommended):
+```bash
+# Install uv if not installed
+pip install uv
+
+# Create virtual environment and install deps
+uv venv
+uv venv activate
+uv pip install -e .
+uv pip install -e ".[dev]"
+```
+
+> Alternative setup with pip:
+> ```bash
+> python -m venv venv
+> source venv/bin/activate  # On Windows: venv\Scripts\activate
+> pip install -e .
+=======
+> # Or alternatively:
+> pip install -r requirements.txt
+> pip install -r requirements-dev.txt
+> ```
+
+3. Configure environment:
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+#### Testing Your Changes Locally
+
+1. Run the MCP server in development mode:
+```bash
+# Install the MCP Inspector if you haven't already
+npm install -g @modelcontextprotocol/inspector
+
+# Start the server with the Inspector
+npx @modelcontextprotocol/inspector mcp-image-recognition
+```
+
+2. The Inspector provides a web interface (usually at http://localhost:3000) where you can:
+   - Send requests to your tools
+   - View request/response logs
+   - Debug issues with your implementation
+
+3. Test specific tools:
+   - For `describe_image`: Provide a base64-encoded image
+   - For `describe_image_from_file`: Provide a path to a local image file
+   - For `describe_image_from_url`: Provide a URL to an image
+
+#### Integrating with Claude Desktop for Testing
+
+1. Temporarily modify your Claude Desktop configuration to use your development version:
+```json
+{
+    "mcpServers": {
+        "image-recognition": {
+            "command": "python",
+            "args": [
+                "-m", "image_recognition_server.server"
+            ],
+            "cwd": "/path/to/your/mcp-image-recognition",
+            "env": {
+                "VISION_PROVIDER": "openai",
+                "OPENAI_API_KEY": "your-api-key",
+                "OPENAI_MODEL": "gpt-4o"
+            }
+        }
+    }
+}
+```
+
+2. Restart Claude Desktop to apply the changes
+3. Test by uploading images or providing image URLs in your conversations
+
 ### Running Tests
 
 Run all tests:
@@ -230,6 +324,47 @@ Run the container:
 ```bash
 docker run -it --env-file .env mcp-image-recognition
 ```
+
+#### Docker File Access Limitations
+
+When running the MCP server in Docker, the `describe_image_from_file` tool can only access files inside the container. By default, the container has no access to files on your host system. To enable access to local files, you must explicitly map directories when configuring the MCP server.
+
+**Important Note**: When using Claude Desktop, Cursor, or other platforms where images are uploaded to chats, those images are stored on Anthropic's servers and not directly accessible to the MCP server via a filesystem path. In these cases, you should:
+1. Use the `describe_image` tool (which works with base64-encoded images) for images uploaded directly to the chat
+2. Use the new `describe_image_from_url` tool for images hosted online
+3. For local files, ensure the directory is properly mapped to the Docker container
+
+#### Mapping Local Directories to Docker
+
+To give the Docker container access to specific folders on your system, modify your MCP server configuration to include volume mapping:
+
+```json
+{
+    "mcpServers": {
+        "image-recognition": {
+            "command": "docker",
+            "args": [
+                "run",
+                "--rm",
+                "-i",
+                "-v", "/path/on/host:/path/in/container",
+                "zudsniper/mcp-image-recognition:latest"
+            ],
+            "env": {
+                "VISION_PROVIDER": "openai",
+                "OPENAI_API_KEY": "your-api-key",
+                "OPENAI_MODEL": "gpt-4o"
+            }
+        }
+    }
+}
+```
+
+For example, to map your Downloads folder:
+- Windows: `-v "C:\\Users\\YourName\\Downloads:/app/images"`
+- macOS/Linux: `-v "/Users/YourName/Downloads:/app/images"`
+
+Then access files using the container path: `/app/images/your_image.jpg`
 
 ## License
 
@@ -272,7 +407,9 @@ Is there any safety concern in this image?
 
 ## Release History
 
-- **0.1.3** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
+- **1.1.0** (2025-03-28): Enhanced tool descriptions for better selection, updated OpenAI SDK to latest version
+- **1.0.1** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
+- **1.0.0** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
 - **0.1.2** (2025-02-20): Improved OCR error handling and added comprehensive test coverage for OCR functionality
 - **0.1.1** (2025-02-19): Added Tesseract OCR support for text extraction from images (optional feature)
 - **0.1.0** (2025-02-19): Initial release with Anthropic and OpenAI vision support
