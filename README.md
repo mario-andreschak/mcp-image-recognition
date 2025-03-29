@@ -72,7 +72,7 @@ pip install -e .
 ### Claude Desktop Integration
 
 1. Go to **Claude** > **Settings** > **Developer** > **Edit Config** > **claude_desktop_config.json**
-2. Add the following configuration:
+2. Add configuration with inline environment variables:
 
 ```json
 {
@@ -81,7 +81,12 @@ pip install -e .
             "command": "uvx",
             "args": [
                 "mcp-image-recognition"
-            ]
+            ],
+            "env": {
+                "VISION_PROVIDER": "openai",
+                "OPENAI_API_KEY": "your-api-key",
+                "OPENAI_MODEL": "gpt-4o"
+            }
         }
     }
 }
@@ -89,15 +94,15 @@ pip install -e .
 
 ### Cursor Integration
 
-Go to **Cursor Settings** > **MCP** and paste this as a command:
+Go to **Cursor Settings** > **MCP** and paste with env variables:
 
 ```
-uvx mcp-image-recognition
+VISION_PROVIDER=openai OPENAI_API_KEY=your-api-key OPENAI_MODEL=gpt-4o uvx mcp-image-recognition
 ```
 
 ### Docker Integration
 
-Add the following to your Claude Desktop config:
+Add this to your Claude Desktop config with inline environment:
 
 ```json
 {
@@ -108,11 +113,24 @@ Add the following to your Claude Desktop config:
                 "run",
                 "--rm",
                 "-i",
-                "--env-file=/path/to/your/.env",
-                "mcpimagerecognition/mcp-image-recognition:latest"
-            ]
+                "zudsniper/mcp-image-recognition:latest"
+            ],
+            "env": {
+                "VISION_PROVIDER": "openai",
+                "OPENAI_API_KEY": "your-api-key", 
+                "OPENAI_MODEL": "gpt-4o"
+            }
         }
     }
+}
+```
+
+For Cloudflare configuration:
+```json
+"env": {
+    "VISION_PROVIDER": "cloudflare",
+    "CLOUDFLARE_API_KEY": "your-api-key",
+    "CLOUDFLARE_ACCOUNT_ID": "your-account-id"
 }
 ```
 
