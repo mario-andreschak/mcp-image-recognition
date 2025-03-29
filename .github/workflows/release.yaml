@@ -33,7 +33,7 @@ jobs:
       
       - name: Run tests
         run: |
-          pytest tests/
+          PYTHONPATH=$PWD pytest tests/ --asyncio-mode=strict
 
   build-and-push-docker:
     needs: test

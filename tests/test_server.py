@@ -23,7 +23,7 @@ async def client() -> AsyncGenerator[ClientSession, None]:
     """Create a test client connected to the server."""
     server_params = StdioServerParameters(
         command="python",
-        args=["-m", "src.image_recognition_server.server"],
+        args=["-m", "image_recognition_server.server"],
         env={
             "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY", "test_key"),
             "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", "test_key"),
