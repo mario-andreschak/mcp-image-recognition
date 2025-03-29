@@ -232,6 +232,7 @@ pip install uv
 # Create virtual environment and install deps
 uv venv
 uv venv activate
+uv pip install -e .
 uv pip install -e ".[dev]"
 ```
 
@@ -239,7 +240,8 @@ uv pip install -e ".[dev]"
 > ```bash
 > python -m venv venv
 > source venv/bin/activate  # On Windows: venv\Scripts\activate
-> pip install -e ".[dev]"
+> pip install -e .
+=======
 > # Or alternatively:
 > pip install -r requirements.txt
 > pip install -r requirements-dev.txt
