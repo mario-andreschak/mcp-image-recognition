@@ -1,6 +1,6 @@
 # MCP Image Recognition Server
 
-An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.1.0.
+An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.2.0.
 
 ![MCP Image Recognition](assets/mcp-image-recognition-banner.png)
 
@@ -106,6 +106,8 @@ VISION_PROVIDER=openai OPENAI_API_KEY=your-api-key OPENAI_MODEL=gpt-4o uvx mcp-i
 
 ### Docker Integration
 
+#### Option 1: Using DockerHub Image
+
 Add this to your Claude Desktop config with inline environment:
 
 ```json
@@ -128,6 +130,59 @@ Add this to your Claude Desktop config with inline environment:
     }
 }
 ```
+
+#### Option 2: Using Development Container (Recommended for Development)
+
+Use the included devcontainer for direct development and integration:
+
+1. Clone the repository:
+```bash
+git clone https://github.com/zudsniper/mcp-image-recognition.git
+cd mcp-image-recognition
+```
+
+2. Start the container with docker-compose:
+```bash
+docker-compose up -d
+```
+
+3. Get the container ID:
+```bash
+CONTAINER_ID=$(docker-compose ps -q mcp-image-recognition)
+```
+
+4. Add this to your Claude Desktop config:
+```json
+{
+    "mcpServers": {
+        "image-recognition": {
+            "command": "docker",
+            "args": [
+                "exec",
+                "-i",
+                "CONTAINER_ID_HERE",
+                "python",
+                "-m",
+                "image_recognition_server.server"
+            ],
+            "env": {
+                "VISION_PROVIDER": "openai",
+                "OPENAI_API_KEY": "your-api-key",
+                "OPENAI_MODEL": "gpt-4o"
+            }
+        }
+    }
+}
+```
+
+Replace `CONTAINER_ID_HERE` with your actual container ID.
+
+#### VS Code Development
+
+1. Install VS Code with the Remote Containers extension
+2. Open the project folder in VS Code
+3. Click "Reopen in Container" when prompted
+4. The devcontainer will build and open with all dependencies installed
 
 For Cloudflare configuration:
 ```json
@@ -165,17 +220,24 @@ npx @modelcontextprotocol/inspector mcp-image-recognition
 ### Available Tools
 
 1. `describe_image`
-   - Input: Base64-encoded image data and MIME type
-   - Output: Detailed description of the image
+   - **Purpose**: Analyze images directly uploaded to chat
+   - **Input**: Base64-encoded image data 
+   - **Output**: Detailed description of the image
+   - **Best for**: Images uploaded directly to Claude, Cursor, or other chat interfaces
 
 2. `describe_image_from_file`
-   - Input: Path to an image file
-   - Output: Detailed description of the image
-   - Note: When running in Docker, this tool requires mapping local directories (see Docker File Access section)
+   - **Purpose**: Process local image files from filesystem
+   - **Input**: Path to an image file
+   - **Output**: Detailed description of the image
+   - **Best for**: Local development with filesystem access
+   - **Note**: When running in Docker, requires volume mapping (see Docker File Access section)
 
 3. `describe_image_from_url`
-   - Input: URL of an image
-   - Output: Detailed description of the image
+   - **Purpose**: Analyze images from web URLs without downloading manually
+   - **Input**: URL of a publicly accessible image
+   - **Output**: Detailed description of the image
+   - **Best for**: Web images, screenshots, or anything with a public URL
+   - **Note**: Uses browser-like headers to avoid rate limiting
 
 ### Environment Configuration
 
@@ -407,6 +469,7 @@ Is there any safety concern in this image?
 
 ## Release History
 
+- **1.2.0** (2025-03-28): Fixed URL image fetching with httpx & browser headers, added devcontainer support
 - **1.1.0** (2025-03-28): Enhanced tool descriptions for better selection, updated OpenAI SDK to latest version
 - **1.0.1** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
 - **1.0.0** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
