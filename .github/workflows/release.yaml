@@ -89,7 +89,7 @@ jobs:
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          uv pip install build twine
+          uv pip install --system build twine
           python -m build
           twine upload dist/* --username __token__ --password $PYPI_API_TOKEN
 
