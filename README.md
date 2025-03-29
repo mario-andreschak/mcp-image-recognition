@@ -1,6 +1,6 @@
 # MCP Image Recognition Server
 
-An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.1.0.
+An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.2.1.
 
 ![MCP Image Recognition](assets/mcp-image-recognition-banner.png)
 
@@ -106,6 +106,8 @@ VISION_PROVIDER=openai OPENAI_API_KEY=your-api-key OPENAI_MODEL=gpt-4o uvx mcp-i
 
 ### Docker Integration
 
+#### Option 1: Using DockerHub Image
+
 Add this to your Claude Desktop config with inline environment:
 
 ```json
@@ -165,17 +167,24 @@ npx @modelcontextprotocol/inspector mcp-image-recognition
 ### Available Tools
 
 1. `describe_image`
-   - Input: Base64-encoded image data and MIME type
-   - Output: Detailed description of the image
+   - **Purpose**: Analyze images directly uploaded to chat
+   - **Input**: Base64-encoded image data 
+   - **Output**: Detailed description of the image
+   - **Best for**: Images uploaded directly to Claude, Cursor, or other chat interfaces
 
 2. `describe_image_from_file`
-   - Input: Path to an image file
-   - Output: Detailed description of the image
-   - Note: When running in Docker, this tool requires mapping local directories (see Docker File Access section)
+   - **Purpose**: Process local image files from filesystem
+   - **Input**: Path to an image file
+   - **Output**: Detailed description of the image
+   - **Best for**: Local development with filesystem access
+   - **Note**: When running in Docker, requires volume mapping (see Docker File Access section)
 
 3. `describe_image_from_url`
-   - Input: URL of an image
-   - Output: Detailed description of the image
+   - **Purpose**: Analyze images from web URLs without downloading manually
+   - **Input**: URL of a publicly accessible image
+   - **Output**: Detailed description of the image
+   - **Best for**: Web images, screenshots, or anything with a public URL
+   - **Note**: Uses browser-like headers to avoid rate limiting
 
 ### Environment Configuration
 
@@ -241,7 +250,6 @@ uv pip install -e ".[dev]"
 > python -m venv venv
 > source venv/bin/activate  # On Windows: venv\Scripts\activate
 > pip install -e .
-=======
 > # Or alternatively:
 > pip install -r requirements.txt
 > pip install -r requirements-dev.txt
@@ -251,6 +259,45 @@ uv pip install -e ".[dev]"
 ```bash
 cp .env.example .env
 # Edit .env with your API keys
+```
+
+#### VS Code / DevContainer Development
+
+1. Install VS Code with the Remote Containers extension
+2. Open the project folder in VS Code
+3. Click "Reopen in Container" when prompted
+4. The devcontainer will build and open with all dependencies installed
+
+#### Using Development Container with Claude Desktop
+
+1. Pass environment file to docker compose:
+```bash
+# Modern Docker Compose V2 syntax
+docker compose --env-file .env up -d
+```
+
+2. Add this to your Claude Desktop config:
+```json
+{
+    "mcpServers": {
+        "image-recognition": {
+            "command": "docker",
+            "args": [
+                "exec",
+                "-i",
+                "mcp-image-recognition-dev",
+                "python",
+                "-m",
+                "image_recognition_server.server"
+            ],
+            "env": {
+                "VISION_PROVIDER": "openai",
+                "OPENAI_API_KEY": "your-api-key",
+                "OPENAI_MODEL": "gpt-4o"
+            }
+        }
+    }
+}
 ```
 
 #### Testing Your Changes Locally
@@ -407,6 +454,8 @@ Is there any safety concern in this image?
 
 ## Release History
 
+- **1.2.1** (2025-03-28): Reorganized documentation and improved devcontainer workflow
+- **1.2.0** (2025-03-28): Fixed URL image fetching with httpx & browser headers, added devcontainer support
 - **1.1.0** (2025-03-28): Enhanced tool descriptions for better selection, updated OpenAI SDK to latest version
 - **1.0.1** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
 - **1.0.0** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
