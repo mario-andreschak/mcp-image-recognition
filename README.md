@@ -1,8 +1,12 @@
 # MCP Image Recognition Server
 
-An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 0.1.4.
+An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.0.2.
 
-![MCP Image Recognition](https://raw.githubusercontent.com/zudsniper/mcp-image-recognition/master/assets/mcp-image-recognition-banner.png)
+![MCP Image Recognition](assets/mcp-image-recognition-banner.png)
+
+## Authors
+Originally this project was created by [`@mario-andreschak`](https://github.com/mario-andreschak/).<sup>Thank you!</sup>  
+It is currently maintained by [`@zudsniper`](https://github.com/zudsniper).  
 
 ## Features
 
@@ -42,17 +46,17 @@ uvx install mcp-image-recognition
 ### Option 2: Using Docker
 
 ```bash
-docker pull mcpimagerecognition/mcp-image-recognition:latest
+docker pull zudsniper/mcp-image-recognition:latest
 
 # Create a .env file first, then run:
-docker run -it --env-file .env mcpimagerecognition/mcp-image-recognition
+docker run -it --env-file .env zudsniper/mcp-image-recognition
 ```
 
 ### Option 3: From Source
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/mario-andreschak/mcp-image-recognition.git
+git clone https://github.com/zudsniper/mcp-image-recognition.git
 cd mcp-image-recognition
 ```
 
@@ -150,7 +154,7 @@ python -m image_recognition_server.server
 
 Using Docker:
 ```bash
-docker run -it --env-file .env mcpimagerecognition/mcp-image-recognition
+docker run -it --env-file .env zudsniper/mcp-image-recognition
 ```
 
 Start in development mode with the MCP Inspector:
@@ -216,7 +220,7 @@ OpenRouter allows you to access various models using the OpenAI API format. To u
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/mario-andreschak/mcp-image-recognition.git
+git clone https://github.com/zudsniper/mcp-image-recognition.git
 cd mcp-image-recognition
 ```
 
@@ -394,7 +398,8 @@ Is there any safety concern in this image?
 
 ## Release History
 
-- **0.1.4** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
+- **0.1.5/1.0.2** (2025-03-28): Enhanced tool descriptions for better selection, updated OpenAI SDK to latest version
+- **0.1.4/1.0.1** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
 - **0.1.3** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
 - **0.1.2** (2025-02-20): Improved OCR error handling and added comprehensive test coverage for OCR functionality
 - **0.1.1** (2025-02-19): Added Tesseract OCR support for text extraction from images (optional feature)

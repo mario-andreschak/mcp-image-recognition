@@ -133,11 +133,14 @@ async def process_image_with_ocr(image_data: str, prompt: str) -> str:
 async def describe_image(
     image: str, prompt: str = "Please describe this image in detail."
 ) -> str:
-    """Describe the contents of an image using vision AI.
+    """Describe an image from base64-encoded data. Use for images directly uploaded to chat.
+    
+    Best for: Images uploaded to the current conversation where no public URL exists.
+    Not for: Local files on your computer or images with public URLs.
 
     Args:
-        image: Image data and MIME type
-        prompt: Optional prompt to use for the description.
+        image: Base64-encoded image data
+        prompt: Optional prompt to guide the description
 
     Returns:
         str: Detailed description of the image
@@ -168,11 +171,15 @@ async def describe_image(
 async def describe_image_from_file(
     filepath: str, prompt: str = "Please describe this image in detail."
 ) -> str:
-    """Describe the contents of an image file using vision AI.
+    """Describe an image from a local file path. Requires proper file system access.
+    
+    Best for: Local files when the server has filesystem access to the path.
+    Limitations: When using Docker, requires volume mapping (-v flag) to access host files.
+    Not recommended for: Images uploaded to chat or images with public URLs.
 
     Args:
-        filepath: Path to the image file
-        prompt: Optional prompt to use for the description.
+        filepath: Absolute path to the image file
+        prompt: Optional prompt to guide the description
 
     Returns:
         str: Detailed description of the image
@@ -207,11 +214,15 @@ async def describe_image_from_file(
 async def describe_image_from_url(
     url: str, prompt: str = "Please describe this image in detail."
 ) -> str:
-    """Describe the contents of an image from a URL using vision AI.
+    """Describe an image from a public URL. Most reliable method for web images.
+    
+    Best for: Images with public URLs accessible from the internet.
+    Advantages: Works regardless of server deployment method (local/Docker).
+    Not for: Local files or images already uploaded to the current conversation.
 
     Args:
-        url: URL of the image
-        prompt: Optional prompt to use for the description.
+        url: Direct URL to the image (must be publicly accessible)
+        prompt: Optional prompt to guide the description
 
     Returns:
         str: Detailed description of the image
