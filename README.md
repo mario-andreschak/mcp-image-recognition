@@ -1,6 +1,6 @@
 # MCP Image Recognition Server
 
-An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.0.2.
+An MCP server that provides image recognition capabilities using Anthropic, OpenAI, and Cloudflare Workers AI vision APIs. Version 1.1.0.
 
 ![MCP Image Recognition](assets/mcp-image-recognition-banner.png)
 
@@ -398,9 +398,9 @@ Is there any safety concern in this image?
 
 ## Release History
 
-- **0.1.5/1.0.2** (2025-03-28): Enhanced tool descriptions for better selection, updated OpenAI SDK to latest version
-- **0.1.4/1.0.1** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
-- **0.1.3** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
+- **1.1.0** (2025-03-28): Enhanced tool descriptions for better selection, updated OpenAI SDK to latest version
+- **1.0.1** (2025-03-28): Added URL-based image recognition, improved Docker documentation, and fixed filesystem limitations
+- **1.0.0** (2025-03-28): Added Cloudflare Workers AI support with llava-1.5-7b-hf model, Docker support, and uvx compatibility
 - **0.1.2** (2025-02-20): Improved OCR error handling and added comprehensive test coverage for OCR functionality
 - **0.1.1** (2025-02-19): Added Tesseract OCR support for text extraction from images (optional feature)
 - **0.1.0** (2025-02-19): Initial release with Anthropic and OpenAI vision support

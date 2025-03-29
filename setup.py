@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="mcp-image-recognition",
-    version="0.1.5",
+    version="1.1.0",
     description="MCP server for image recognition using vision APIs (Anthropic, OpenAI, Cloudflare Workers AI)",
     author="Mario & Contributors",
     packages=find_packages(where="src"),
