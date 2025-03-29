@@ -32,17 +32,23 @@ async def client() -> AsyncGenerator[ClientSession, None]:
         },
     )
 
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
-            yield session
+    read, write = await stdio_client(server_params).__aenter__()
+    session = ClientSession(read, write)
+    await session.__aenter__()
+    await session.initialize()
+    
+    try:
+        yield session
+    finally:
+        await session.__aexit__(None, None, None)
+        await stdio_client(server_params).__aexit__(None, None, None)
 
 
 @pytest.mark.asyncio
 async def test_list_tools(client: ClientSession):
     """Test that the server exposes the expected tools."""
-    tools: list[Tool] = await client.list_tools()
-    tool_names = {tool.name for tool in tools}
+    tools = await client.list_tools()
+    tool_names = [tool["name"] for tool in tools]
     assert "describe_image" in tool_names
     assert "describe_image_from_file" in tool_names
 
@@ -52,10 +58,12 @@ async def test_describe_image(client: ClientSession) -> None:
     """Test the describe_image tool with a test image."""
     result = await client.call_tool(
         "describe_image",
-        arguments={"image": {"data": TEST_IMAGE_DATA, "mime_type": "image/png"}},
+        arguments={"image": TEST_IMAGE_DATA, "prompt": "Describe this image"},
     )
-    assert isinstance(result, str)
-    assert len(result) > 0
+    
+    # Extract text from response
+    text = result.content[0].text if hasattr(result, "content") else result
+    assert len(text) > 0
 
 
 @pytest.mark.asyncio
@@ -67,26 +75,30 @@ async def test_describe_image_from_file(client: ClientSession, tmp_path: Path) -
     image_path.write_bytes(image_data)
 
     result = await client.call_tool(
-        "describe_image_from_file", arguments={"filepath": str(image_path)}
+        "describe_image_from_file", 
+        arguments={"filepath": str(image_path), "prompt": "Describe this image"}
     )
-    assert isinstance(result, str)
-    assert len(result) > 0
+    
+    # Extract text from response
+    text = result.content[0].text if hasattr(result, "content") else result
+    assert len(text) > 0
 
 
 @pytest.mark.asyncio
 async def test_invalid_image_data(client: ClientSession) -> None:
     """Test that the server handles invalid image data appropriately."""
-    with pytest.raises(Exception):
-        await client.call_tool(
-            "describe_image",
-            arguments={"image": {"data": "invalid_base64", "mime_type": "image/png"}},
-        )
+    result = await client.call_tool(
+        "describe_image",
+        arguments={"image": "invalid_base64", "prompt": "Describe this image"},
+    )
+    assert hasattr(result, "isError") and result.isError
 
 
 @pytest.mark.asyncio
 async def test_invalid_file_path(client: ClientSession) -> None:
     """Test that the server handles invalid file paths appropriately."""
-    with pytest.raises(Exception):
-        await client.call_tool(
-            "describe_image_from_file", arguments={"filepath": "/nonexistent/path.png"}
-        )
+    result = await client.call_tool(
+        "describe_image_from_file", 
+        arguments={"filepath": "/nonexistent/path.png", "prompt": "Describe this image"}
+    )
+    assert hasattr(result, "isError") and result.isError
