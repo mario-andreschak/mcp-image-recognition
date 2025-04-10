@@ -1,92 +1,88 @@
 import base64
 import os
-from pathlib import Path
-from typing import AsyncGenerator
-
 import pytest
 import pytest_asyncio
-from mcp import ClientSession, StdioServerParameters, Tool, stdio_client
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
-# Test image (a simple 1x1 pixel PNG)
-TEST_IMAGE_DATA = base64.b64encode(
-    bytes.fromhex(
-        "89504e470d0a1a0a0000000d494844520000000100000001080600000001f15c"
-        "4a00000009704859730000000ec400000ec401952b0e1b0000001c4944415478"
-        "9c636460606062626060606060600000000000ffff030000060001f5f7e3c000"
-        "00000049454e44ae426082"
-    )
-).decode()
+from image_recognition_server.server import describe_image, describe_image_from_file, describe_image_from_url
 
+# Valid 1x1 pixel PNG image
+TEST_IMAGE_DATA = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
 
-@pytest_asyncio.fixture
-async def client() -> AsyncGenerator[ClientSession, None]:
-    """Create a test client connected to the server."""
-    server_params = StdioServerParameters(
-        command="python",
-        args=["-m", "src.image_recognition_server.server"],
-        env={
-            "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY", "test_key"),
-            "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", "test_key"),
-            "VISION_PROVIDER": "anthropic",
-            "LOG_LEVEL": "DEBUG",
-        },
-    )
+# Mock environment variables
+@pytest.fixture(autouse=True)
+def mock_env_vars(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test_key")
+    monkeypatch.setenv("OPENAI_API_KEY", "test_key")
+    monkeypatch.setenv("VISION_PROVIDER", "anthropic")
+    monkeypatch.setenv("LOG_LEVEL", "DEBUG")
 
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
-            yield session
-
+# Mock vision client that returns a test response
+@pytest.fixture
+def mock_vision_client():
+    mock_client = MagicMock()
+    mock_client.describe_image.return_value = "This is a test image description."
+    return mock_client
 
 @pytest.mark.asyncio
-async def test_list_tools(client: ClientSession):
-    """Test that the server exposes the expected tools."""
-    tools: list[Tool] = await client.list_tools()
-    tool_names = {tool.name for tool in tools}
-    assert "describe_image" in tool_names
-    assert "describe_image_from_file" in tool_names
-
-
-@pytest.mark.asyncio
-async def test_describe_image(client: ClientSession) -> None:
-    """Test the describe_image tool with a test image."""
-    result = await client.call_tool(
-        "describe_image",
-        arguments={"image": {"data": TEST_IMAGE_DATA, "mime_type": "image/png"}},
-    )
-    assert isinstance(result, str)
-    assert len(result) > 0
-
+async def test_describe_image_function(mock_vision_client):
+    """Test the describe_image function directly."""
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.validate_base64_image', return_value=True):
+            result = await describe_image(image=TEST_IMAGE_DATA, prompt="Test prompt")
+            assert isinstance(result, str)
+            assert "test image description" in result.lower()
+            
+            # Validate client was called correctly
+            mock_vision_client.describe_image.assert_called_once()
 
 @pytest.mark.asyncio
-async def test_describe_image_from_file(client: ClientSession, tmp_path: Path) -> None:
-    """Test the describe_image_from_file tool with a test image file."""
+async def test_describe_image_invalid_data(mock_vision_client):
+    """Test describe_image with invalid image data."""
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.validate_base64_image', return_value=False):
+            with pytest.raises(ValueError, match="Invalid base64 image data"):
+                await describe_image(image="invalid_data", prompt="Test prompt")
+
+@pytest.mark.asyncio
+async def test_describe_image_from_file_function(mock_vision_client, tmp_path):
+    """Test the describe_image_from_file function directly."""
     # Create a test image file
     image_path = tmp_path / "test.png"
     image_data = base64.b64decode(TEST_IMAGE_DATA)
     image_path.write_bytes(image_data)
-
-    result = await client.call_tool(
-        "describe_image_from_file", arguments={"filepath": str(image_path)}
-    )
-    assert isinstance(result, str)
-    assert len(result) > 0
-
-
-@pytest.mark.asyncio
-async def test_invalid_image_data(client: ClientSession) -> None:
-    """Test that the server handles invalid image data appropriately."""
-    with pytest.raises(Exception):
-        await client.call_tool(
-            "describe_image",
-            arguments={"image": {"data": "invalid_base64", "mime_type": "image/png"}},
-        )
-
+    
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.image_to_base64', return_value=(TEST_IMAGE_DATA, "image/png")):
+            result = await describe_image_from_file(filepath=str(image_path), prompt="Test prompt")
+            assert isinstance(result, str)
+            assert "test image description" in result.lower()
 
 @pytest.mark.asyncio
-async def test_invalid_file_path(client: ClientSession) -> None:
-    """Test that the server handles invalid file paths appropriately."""
-    with pytest.raises(Exception):
-        await client.call_tool(
-            "describe_image_from_file", arguments={"filepath": "/nonexistent/path.png"}
-        )
+async def test_describe_image_from_file_nonexistent(mock_vision_client):
+    """Test describe_image_from_file with nonexistent file."""
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with pytest.raises(FileNotFoundError):
+            await describe_image_from_file(filepath="/nonexistent/path.png", prompt="Test prompt")
+
+@pytest.mark.asyncio
+async def test_describe_image_from_url_function(mock_vision_client):
+    """Test the describe_image_from_url function directly."""
+    test_url = "https://example.com/image.jpg"
+    
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.url_to_base64', return_value=(TEST_IMAGE_DATA, "image/jpeg")):
+            result = await describe_image_from_url(url=test_url, prompt="Test prompt")
+            assert isinstance(result, str)
+            assert "test image description" in result.lower()
+
+@pytest.mark.asyncio
+async def test_describe_image_from_url_invalid(mock_vision_client):
+    """Test describe_image_from_url with invalid URL."""
+    test_url = "https://invalid-url.com/image.jpg"
+    
+    with patch('image_recognition_server.server.get_vision_client', return_value=mock_vision_client):
+        with patch('image_recognition_server.server.url_to_base64', side_effect=ValueError("Failed to fetch image")):
+            with pytest.raises(ValueError, match="Failed to fetch image"):
+                await describe_image_from_url(url=test_url, prompt="Test prompt")
