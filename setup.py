@@ -14,6 +14,8 @@ setup(
         "openai>=1.0.0",
         "python-dotenv>=1.0.0",
         "Pillow>=10.0.0",
+        "numpy>=1.26.0",
+        "pandas>=2.1.0",
         "pytesseract>=0.3.13",
     ],
     extras_require={
