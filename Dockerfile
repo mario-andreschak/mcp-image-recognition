@@ -1,45 +1,33 @@
-FROM python:3.10-slim AS builder
+# escape=`
 
+# Use Windows Server Core as base image
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
+
+# Set shell to PowerShell
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+# Install Python 3.10 and Tesseract OCR
+RUN Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe' -OutFile 'python-3.10.0-amd64.exe'; `
+    Start-Process python-3.10.0-amd64.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait; `
+    Remove-Item python-3.10.0-amd64.exe; `
+    Invoke-WebRequest -Uri 'https://github.com/UB-Mannheim/tesseract/releases/download/v5.5.0/tesseract-ocr-w64-setup-5.5.0.20241111.exe' -OutFile 'tesseract-installer.exe'; `
+    Start-Process tesseract-installer.exe -ArgumentList '/S /D=C:\Program Files\Tesseract-OCR' -Wait; `
+    Remove-Item tesseract-installer.exe
+
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies (including Tesseract OCR)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    tesseract-ocr \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy only the requirements files first to leverage Docker cache
+# Copy project files
 COPY requirements.txt .
-COPY requirements-dev.txt .
+COPY src/ ./src/
+COPY .env.example ./.env
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
-COPY . .
-
-# Install the package
-RUN pip install -e .
-
-FROM python:3.10-slim AS release
-
-WORKDIR /app
-
-# Install Tesseract OCR
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    tesseract-ocr \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy installed packages and project from builder
-COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
-COPY --from=builder /app /app
-
 # Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV TESSERACT_CMD=/usr/bin/tesseract
+ENV PYTHONPATH=/app/src
+ENV TESSERACT_CMD="C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# Expose port
-EXPOSE 8080
-
-# Run the server when the container starts
-CMD ["python", "-m", "image_recognition_server.server"]
+# Run the server
+CMD ["python", "-m", "src.image_recognition_server.server"]

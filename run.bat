@@ -9,9 +9,6 @@ IF "%1"=="test" (
     ) ELSE IF "%2"=="openai" (
         cls
         python -m pytest tests/test_openai.py -v
-    ) ELSE IF "%2"=="cloudflare" (
-        cls
-        python -m pytest tests/test_cloudflare.py -v
     ) ELSE (
         cls
         python -m pytest tests/ -v
@@ -33,7 +30,7 @@ IF "%1"=="test" (
 ) ELSE (
     echo Invalid command.
     echo Usage:
-    echo   run.bat test [server ^| anthropic ^| openai ^| cloudflare]
+    echo   run.bat test [server ^| anthropic ^| openai]
     echo   run.bat server
     echo   run.bat debug
     echo   run.bat full

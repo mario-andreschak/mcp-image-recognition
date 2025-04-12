@@ -1,7 +1,7 @@
 import os
 import pytest
 from PIL import Image, ImageDraw, ImageFont
-from image_recognition_server.utils.ocr import extract_text_from_image, OCRError
+from src.image_recognition_server.utils.ocr import extract_text_from_image, OCRError
 
 @pytest.fixture
 def text_image():
